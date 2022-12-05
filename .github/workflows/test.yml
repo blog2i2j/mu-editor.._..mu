@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-18.04, ubuntu-latest, macos-10.15, macos-latest, windows-2019, windows-latest]
-        python-version: ['3.5', '3.6', '3.7', '3.8']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
       fail-fast: false
     runs-on: ${{ matrix.os }}
     name: Test Py ${{ matrix.python-version }} - ${{ matrix.os }}
@@ -43,7 +43,7 @@ jobs:
         timeout-minutes: 10
       - name: Run tests
         if: runner.os == 'Linux'
-        run: xvfb-run make check
+        run: QT_QPA_PLATFORM=offscreen python make.py check
         timeout-minutes: 5
       - name: Run tests
         if: runner.os != 'Linux'
@@ -52,7 +52,11 @@ jobs:
 
   test-arm:
     runs-on: ubuntu-latest
-    name: Test Py 3.7 - arm-debian-buster
+    name: Test Arm Debian ${{ matrix.debian-release }}
+    strategy:
+      matrix:
+        debian-release: ['buster', 'bullseye']
+      fail-fast: false
     steps:
       - uses: actions/checkout@v3
       - name: Set up QEMU
@@ -62,7 +66,7 @@ jobs:
           image: tonistiigi/binfmt:latest
           platforms: 'linux/arm64,linux/arm/v7,linux/arm/v6'
       - name: Check Debian image info
-        uses: docker://multiarch/debian-debootstrap:armhf-buster
+        uses: docker://multiarch/debian-debootstrap:armhf-${{ matrix.debian-release }}
         with:
           args: /bin/bash -c "uname -a && cat /etc/os-release"
       - name: Install dependencies and run tests
@@ -94,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        docker-tag: ['stretch-2018-03-13', 'buster-2021-05-28', 'buster-legacy-2022-04-07']
+        docker-tag: ['buster-2021-05-28', 'buster-legacy-2022-04-07', 'bullseye-2022-01-28']
       fail-fast: false
     services:
       rpios:
